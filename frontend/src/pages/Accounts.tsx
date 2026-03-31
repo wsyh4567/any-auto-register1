@@ -1028,6 +1028,16 @@ export default function Accounts() {
                 </div>
               )
             })()}
+            {currentPlatform === 'chatgpt' ? (
+              <div style={{ marginTop: 16, padding: 12, borderRadius: 8, border: '1px solid #e5e7eb', background: '#fafafa' }}>
+                <div style={{ marginBottom: 8, fontWeight: 600 }}>本地真实状态</div>
+                {currentAccount.chatgptLocal && Object.keys(currentAccount.chatgptLocal).length > 0 ? (
+                  <LocalProbeSummary probe={currentAccount.chatgptLocal} />
+                ) : (
+                  <Text type="secondary">尚未探测。可在操作菜单中点击“探测本地状态”。</Text>
+                )}
+              </div>
+            ) : null}
           </>
         )}
       </Modal>
