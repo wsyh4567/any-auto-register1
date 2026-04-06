@@ -572,6 +572,46 @@ export default function Accounts() {
     URL.revokeObjectURL(url)
   }
 
+  const [kiroExportLoading, setKiroExportLoading] = useState(false)
+
+  const exportKiroAuthJson = async () => {
+    const targets = selectedRowKeys.length > 0
+      ? accounts.filter((a) => selectedRowKeys.includes(a.id))
+      : accounts
+    if (targets.length === 0) return
+    setKiroExportLoading(true)
+    let successCount = 0
+    let failCount = 0
+    for (const acc of targets) {
+      try {
+        const r = await apiFetch(`/actions/kiro/${acc.id}/export_auth_json`, {
+          method: 'POST',
+          body: JSON.stringify({ params: {} }),
+        })
+        if (r.ok && r.data?.json_content) {
+          const blob = new Blob([JSON.stringify(r.data.json_content, null, 2)], { type: 'application/json' })
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = r.data.filename || `kiro_${acc.email}.json`
+          a.click()
+          URL.revokeObjectURL(url)
+          successCount++
+        } else {
+          failCount++
+        }
+      } catch {
+        failCount++
+      }
+    }
+    setKiroExportLoading(false)
+    if (failCount === 0) {
+      message.success(`已导出 ${successCount} 个认证文件`)
+    } else {
+      message.warning(`导出完成：成功 ${successCount}，失败 ${failCount}`)
+    }
+  }
+
   const handleDelete = async (id: number) => {
     await apiFetch(`/accounts/${id}`, { method: 'DELETE' })
     message.success('删除成功')
@@ -1204,6 +1244,14 @@ export default function Accounts() {
           )}
           <Button icon={<UploadOutlined />} onClick={() => setImportModalOpen(true)}>导入</Button>
           <Button icon={<DownloadOutlined />} onClick={exportCsv} disabled={accounts.length === 0}>导出</Button>
+          {currentPlatform === 'kiro' && (
+            <Button
+              icon={<DownloadOutlined />}
+              loading={kiroExportLoading}
+              disabled={accounts.length === 0}
+              onClick={exportKiroAuthJson}
+            >导出为AIClient2API格式JSON</Button>
+          )}
           <Button icon={<PlusOutlined />} onClick={() => setAddModalOpen(true)}>新增</Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setRegisterModalOpen(true)}>注册</Button>
           <Button icon={<ReloadOutlined spin={loading} />} onClick={load} />

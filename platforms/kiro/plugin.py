@@ -113,6 +113,7 @@ class KiroPlatform(BasePlatform):
             {"id": "switch_account", "label": "切换到桌面应用", "params": []},
             {"id": "refresh_token", "label": "刷新 Token", "params": []},
             {"id": "upload_kiro_manager", "label": "导入 Kiro Manager", "params": []},
+            {"id": "export_auth_json", "label": "导出认证文件 JSON", "params": []},
         ]
 
     def execute_action(self, action_id: str, account: Account, params: dict) -> dict:
@@ -277,5 +278,13 @@ class KiroPlatform(BasePlatform):
 
             ok, msg = upload_to_kiro_manager(account)
             return {"ok": ok, "data": {"message": msg}}
+
+        elif action_id == "export_auth_json":
+            from platforms.kiro.export_auth_json import generate_auth_json
+
+            data = generate_auth_json(account)
+            email_part = (account.email or "kiro").split("@")[0]
+            filename = f"kiro_{email_part}.json"
+            return {"ok": True, "data": {"json_content": data, "filename": filename}}
 
         raise NotImplementedError(f"未知操作: {action_id}")
